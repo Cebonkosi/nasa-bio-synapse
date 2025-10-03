@@ -1,0 +1,43 @@
+{
+  "name": "nasa-bio-synapse-frontend",
+  "version": "1.0.0",
+  "description": "3D Visualization Dashboard for NASA Space Biology",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "keywords": [
+    "nasa",
+    "space-biology",
+    "3d",
+    "visualization"
+  ],
+  "author": "Your Team Name",
+  "license": "MIT",
+  "dependencies": {
+    "@headlessui/react": "^2.2.9",
+    "@react-three/drei": "^10.7.6",
+    "@react-three/fiber": "^9.3.0",
+    "@types/node": "^24.6.2",
+    "@types/react": "^19.2.0",
+    "autoprefixer": "^10.4.21",
+    "axios": "^1.12.2",
+    "d3-force-3d": "^3.0.6",
+    "eslint": "^9.36.0",
+    "eslint-config-next": "^15.5.4",
+    "force-graph": "^1.51.0",
+    "lucide-react": "^0.544.0",
+    "next": "^15.5.4",
+    "postcss": "^8.5.6",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "tailwindcss": "^4.1.14",
+    "three": "^0.180.0",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@types/three": "^0.180.0"
+  }
+}
