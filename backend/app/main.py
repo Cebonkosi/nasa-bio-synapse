@@ -3,15 +3,21 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import os
 from dotenv import load_dotenv
+from app.routes import data
+from app.services.knowledge_graph import kg_service
+from app.routes import simulation
 
+app.include_router(simulation.router)
 load_dotenv()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
     print("🚀Starting Bio-Synapse Engine")
+    kg_service.init_schema()
     yield
     # Shutdown
+    kg_service.close()
     print("🛑Shutting down Bio-Synapse Engine")
 
 app = FastAPI(
