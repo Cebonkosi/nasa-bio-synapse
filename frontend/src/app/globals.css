@@ -3,26 +3,97 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 255, 255, 255;
-  --background-start-rgb: 11, 61, 145;
-  --background-end-rgb: 0, 0, 0;
+  --nasa-blue: #0B3D91;
+  --nasa-red: #FC3D21;
+  --nasa-gold: #FFD700;
+  --nasa-cyan: #00F5FF;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  color: #ffffff;
+  background: #000000;
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  overflow-x: hidden;
 }
 
-@layer utilities {
-  .text-gradient {
-    background: linear-gradient(135deg, #0B3D91 0%, #FC3D21 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--nasa-cyan) 0%, var(--nasa-blue) 100%);
+  border-radius: 3px;
+}
+
+/* NASA-inspired glow effects */
+.glow-cyan {
+  box-shadow: 
+    0 0 20px rgba(0, 245, 255, 0.6),
+    0 0 40px rgba(0, 245, 255, 0.4),
+    0 0 60px rgba(0, 245, 255, 0.2);
+}
+
+.glow-blue {
+  box-shadow: 
+    0 0 20px rgba(11, 61, 145, 0.6),
+    0 0 40px rgba(11, 61, 145, 0.4),
+    0 0 60px rgba(11, 61, 145, 0.2);
+}
+
+/* Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(0.5deg); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+.float-animation {
+  animation: float 6s ease-in-out infinite;
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.scanline {
+  animation: scanline 8s linear infinite;
+}
+
+/* Terminal text effect */
+.terminal-text {
+  background: linear-gradient(90deg, #00F5FF, #0B3D91, #FC3D21);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-shift 3s ease infinite;
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
