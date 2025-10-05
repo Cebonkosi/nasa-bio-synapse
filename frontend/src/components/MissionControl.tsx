@@ -1,621 +1,530 @@
 'use client'
 
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Filter, Download, Database, BarChart3, LineChart, PieChart, Activity, Zap, TrendingUp, Calendar, Users, TestTube, Brain, Heart, Eye } from 'lucide-react'
+import { Play, Square, Settings, RotateCcw, AlertTriangle, CheckCircle, Shield } from 'lucide-react'
 
-const DataExplorer: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'datasets' | 'analytics' | 'trends' | 'insights'>('datasets')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedDataset, setSelectedDataset] = useState<any>(null)
-  const [timeRange, setTimeRange] = useState<'7d' | '30d' | '1y' | 'all'>('1y')
-  const [filters, setFilters] = useState({
-    organism: 'all',
-    studyType: 'all',
-    riskLevel: 'all'
+const MissionControl: React.FC = () => {
+  const [simulationStatus, setSimulationStatus] = useState<'idle' | 'running' | 'paused' | 'completed'>('idle')
+  const [simulationProgress, setSimulationProgress] = useState(0)
+  const [missionTime, setMissionTime] = useState(0)
+  const [showConfig, setShowConfig] = useState(false)
+  const [missionParams, setMissionParams] = useState({
+    destination: 'MARS_COLONY',
+    duration: 680,
+    crewSize: 4,
+    radiationShielding: 'enhanced',
+    artificialGravity: true,
+    exerciseRegimen: 'high_intensity'
   })
+  const [risks, setRisks] = useState<any[]>([])
+  const [countermeasures, setCountermeasures] = useState<any[]>([])
+  const simulationRef = useRef<NodeJS.Timeout>()
 
-  // Sample NASA space biology datasets
-  const datasets = useMemo(() => [
-    {
-      id: 'nasa-twins',
-      title: 'NASA Twin Study',
-      description: 'Comprehensive study of astronaut twins Scott and Mark Kelly',
-      category: 'genomics',
-      organism: 'human',
-      records: 12500,
-      lastUpdated: '2024-01-15',
-      status: 'active',
-      metrics: {
-        completeness: 98,
-        reliability: 95,
-        citations: 247
-      },
-      tags: ['microgravity', 'genomics', 'longitudinal'],
-      icon: <Users className="w-6 h-6" />
-    },
-    {
-      id: 'iss-bone-density',
-      title: 'ISS Bone Density Study',
-      description: 'Long-term bone density changes in microgravity',
-      category: 'physiology',
-      organism: 'human',
-      records: 8400,
-      lastUpdated: '2024-02-01',
-      status: 'active',
-      metrics: {
-        completeness: 92,
-        reliability: 88,
-        citations: 156
-      },
-      tags: ['bone_loss', 'microgravity', 'exercise'],
-      icon: <Activity className="w-6 h-6" />
-    },
-    {
-      id: 'mars-radiation',
-      title: 'Mars Radiation Exposure',
-      description: 'Radiation effects on biological systems for Mars missions',
-      category: 'radiation',
-      organism: 'multi',
-      records: 5200,
-      lastUpdated: '2024-01-28',
-      status: 'active',
-      metrics: {
-        completeness: 85,
-        reliability: 90,
-        citations: 89
-      },
-      tags: ['radiation', 'mars', 'shielding'],
-      icon: <Zap className="w-6 h-6" />
-    },
-    {
-      id: 'mouse-microgravity',
-      title: 'Rodent Research Microgravity',
-      description: 'Mouse physiological adaptations to space environment',
-      category: 'physiology',
-      organism: 'mouse',
-      records: 3200,
-      lastUpdated: '2024-01-20',
-      status: 'active',
-      metrics: {
-        completeness: 78,
-        reliability: 82,
-        citations: 67
-      },
-      tags: ['rodent', 'muscle_atrophy', 'neuroscience'],
-      icon: <TestTube className="w-6 h-6" />
-    },
-    {
-      id: 'vision-impairment',
-      title: 'Spaceflight Visual Impairment',
-      description: 'Ocular structural changes in long-duration spaceflight',
-      category: 'ophthalmology',
-      organism: 'human',
-      records: 2800,
-      lastUpdated: '2024-02-10',
-      status: 'active',
-      metrics: {
-        completeness: 88,
-        reliability: 85,
-        citations: 134
-      },
-      tags: ['vision', 'fluid_shift', 'intracranial'],
-      icon: <Eye className="w-6 h-6" />
-    },
-    {
-      id: 'immune-space',
-      title: 'Immune System in Space',
-      description: 'Immune function alterations during space missions',
-      category: 'immunology',
-      organism: 'human',
-      records: 4100,
-      lastUpdated: '2024-01-25',
-      status: 'active',
-      metrics: {
-        completeness: 82,
-        reliability: 79,
-        citations: 98
-      },
-      tags: ['immune', 'microbiology', 'stress'],
-      icon: <Heart className="w-6 h-6" />
-    }
-  ], [])
+  // Simulation logic
+  const startSimulation = () => {
+    if (simulationStatus === 'running') return
+    
+    setSimulationStatus('running')
+    setSimulationProgress(0)
+    setMissionTime(0)
+    setRisks([])
+    setCountermeasures([])
 
-  // Analytics data
-  const analyticsData = useMemo(() => ({
-    categories: {
-      'Physiology': 42,
-      'Genomics': 28,
-      'Radiation': 15,
-      'Psychology': 8,
-      'Nutrition': 7
-    },
-    trends: [
-      { month: 'Jan', studies: 45, citations: 120 },
-      { month: 'Feb', studies: 52, citations: 145 },
-      { month: 'Mar', studies: 48, citations: 138 },
-      { month: 'Apr', studies: 61, citations: 189 },
-      { month: 'May', studies: 55, citations: 167 },
-      { month: 'Jun', studies: 68, citations: 210 }
-    ],
-    organisms: {
-      'Human': 65,
-      'Mouse': 20,
-      'Plant': 8,
-      'Other': 7
-    }
-  }), [])
-
-  // Filter datasets based on search and filters
-  const filteredDatasets = useMemo(() => {
-    return datasets.filter(dataset => {
-      const matchesSearch = dataset.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           dataset.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           dataset.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+    // Simulate mission progression
+    simulationRef.current = setInterval(() => {
+      setSimulationProgress(prev => {
+        const newProgress = prev + 0.5
+        if (newProgress >= 100) {
+          completeSimulation()
+          return 100
+        }
+        return newProgress
+      })
+      setMissionTime(prev => prev + 1)
       
-      const matchesOrganism = filters.organism === 'all' || dataset.organism === filters.organism
-      const matchesCategory = filters.studyType === 'all' || dataset.category === filters.studyType
+      // Add risks and countermeasures at certain progress points
+      if (simulationProgress >= 20 && risks.length === 0) {
+        setRisks([
+          { id: 1, name: 'Radiation Exposure', severity: 'high', progress: 25 },
+          { id: 2, name: 'Bone Density Loss', severity: 'medium', progress: 45 },
+          { id: 3, name: 'Muscle Atrophy', severity: 'medium', progress: 60 }
+        ])
+      }
       
-      return matchesSearch && matchesOrganism && matchesCategory
-    })
-  }, [datasets, searchQuery, filters])
+      if (simulationProgress >= 40 && countermeasures.length === 0) {
+        setCountermeasures([
+          { id: 1, name: 'Advanced Radiation Shielding', effectiveness: 85, status: 'active' },
+          { id: 2, name: 'ARED Exercise System', effectiveness: 78, status: 'active' },
+          { id: 3, name: 'Nutritional Supplements', effectiveness: 65, status: 'active' }
+        ])
+      }
+    }, 100)
+  }
 
-  // Quick stats
-  const stats = useMemo(() => ({
-    totalDatasets: datasets.length,
-    totalRecords: datasets.reduce((sum, dataset) => sum + dataset.records, 0),
-    activeStudies: datasets.filter(d => d.status === 'active').length,
-    avgReliability: Math.round(datasets.reduce((sum, dataset) => sum + dataset.metrics.reliability, 0) / datasets.length)
-  }), [datasets])
+  const pauseSimulation = () => {
+    setSimulationStatus('paused')
+    if (simulationRef.current) {
+      clearInterval(simulationRef.current)
+    }
+  }
 
-  const updateFilter = (key: string, value: string) => {
-    setFilters(prev => ({
+  const resetSimulation = () => {
+    setSimulationStatus('idle')
+    setSimulationProgress(0)
+    setMissionTime(0)
+    setRisks([])
+    setCountermeasures([])
+    if (simulationRef.current) {
+      clearInterval(simulationRef.current)
+    }
+  }
+
+  const completeSimulation = () => {
+    setSimulationStatus('completed')
+    if (simulationRef.current) {
+      clearInterval(simulationRef.current)
+    }
+  }
+
+  // Mission configuration
+  const updateMissionParam = (key: string, value: any) => {
+    setMissionParams(prev => ({
       ...prev,
       [key]: value
     }))
   }
+
+  // Format mission time
+  const formatMissionTime = (seconds: number) => {
+    const days = Math.floor(seconds / 86400)
+    const hours = Math.floor((seconds % 86400) / 3600)
+    const minutes = Math.floor((seconds % 3600) / 60)
+    return `${days}d ${hours}h ${minutes}m`
+  }
+
+  // Get mission phase based on progress
+  const getMissionPhase = () => {
+    if (simulationProgress < 25) return 'LAUNCH_AND_TRANSIT'
+    if (simulationProgress < 50) return 'DEEP_SPACE_OPERATIONS'
+    if (simulationProgress < 75) return 'PLANETARY_APPROACH'
+    return 'SURFACE_OPERATIONS'
+  }
+
+  useEffect(() => {
+    return () => {
+      if (simulationRef.current) {
+        clearInterval(simulationRef.current)
+      }
+    }
+  }, [])
 
   return (
     <div className="h-[600px] bg-space-black/40 rounded-2xl border border-nasa-blue/30 p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
-          <div className="w-3 h-3 bg-nasa-cyan rounded-full animate-pulse"></div>
-          <h2 className="text-2xl font-bold text-white">DATA LAB</h2>
+          <div className={`w-3 h-3 rounded-full ${
+            simulationStatus === 'running' ? 'bg-green-400 animate-pulse' :
+            simulationStatus === 'completed' ? 'bg-blue-400' :
+            'bg-red-400'
+          }`}></div>
+          <h2 className="text-2xl font-bold text-white">MISSION CONTROL CENTER</h2>
           <div className="text-nasa-cyan font-mono text-sm bg-nasa-blue/30 px-3 py-1 rounded-full">
-            EXPLORATION_MODE
+            {simulationStatus.toUpperCase()}
           </div>
         </div>
         
-        <div className="flex items-center space-x-4">
-          <div className="text-right">
-            <div className="text-nasa-cyan font-mono text-sm">{stats.totalDatasets} DATASETS</div>
-            <div className="text-gray-400 text-xs">{stats.totalRecords.toLocaleString()} RECORDS</div>
-          </div>
+        <div className="flex space-x-3">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={resetSimulation}
+            className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+          >
+            <RotateCcw className="w-4 h-4" />
+            <span>RESET</span>
+          </motion.button>
+          
+          {simulationStatus === 'running' ? (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={pauseSimulation}
+              className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+            >
+              <Square className="w-4 h-4" />
+              <span>PAUSE</span>
+            </motion.button>
+          ) : (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={startSimulation}
+              disabled={simulationStatus === 'completed'}
+              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Play className="w-4 h-4" />
+              <span>RUN SIMULATION</span>
+            </motion.button>
+          )}
+          
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowConfig(true)}
+            className="bg-nasa-blue hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+          >
+            <Settings className="w-4 h-4" />
+            <span>CONFIGURE</span>
+          </motion.button>
         </div>
       </div>
 
-      <div className="flex space-x-6 h-[500px]">
-        {/* Sidebar */}
-        <div className="w-80 space-y-6">
-          {/* Search */}
+      <div className="grid grid-cols-3 gap-6 h-[500px]">
+        {/* Mission Parameters & Progress */}
+        <div className="space-y-6">
+          {/* Mission Parameters */}
           <div className="bg-space-black/60 border border-nasa-cyan/20 rounded-xl p-4">
-            <h3 className="text-nasa-cyan font-mono text-sm mb-4">DATA_FILTERS</h3>
-            
-            <div className="relative mb-4">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-nasa-cyan" />
-              <input
-                type="text"
-                placeholder="SEARCH DATASETS..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-space-black border border-nasa-cyan/30 rounded-lg pl-10 pr-4 py-2 text-white font-mono text-sm focus:outline-none focus:border-nasa-cyan"
-              />
-            </div>
-
-            {/* Filters */}
+            <h3 className="text-nasa-cyan font-mono text-sm mb-4">MISSION_PARAMETERS</h3>
             <div className="space-y-4">
-              <div>
-                <label className="text-gray-400 text-sm mb-2 block">ORGANISM</label>
-                <select
-                  value={filters.organism}
-                  onChange={(e) => updateFilter('organism', e.target.value)}
-                  className="w-full bg-space-black border border-nasa-cyan/30 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-nasa-cyan"
-                >
-                  <option value="all">ALL ORGANISMS</option>
-                  <option value="human">HUMAN</option>
-                  <option value="mouse">MOUSE</option>
-                  <option value="plant">PLANT</option>
-                  <option value="multi">MULTI-SPECIES</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-gray-400 text-sm mb-2 block">STUDY TYPE</label>
-                <select
-                  value={filters.studyType}
-                  onChange={(e) => updateFilter('studyType', e.target.value)}
-                  className="w-full bg-space-black border border-nasa-cyan/30 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-nasa-cyan"
-                >
-                  <option value="all">ALL TYPES</option>
-                  <option value="physiology">PHYSIOLOGY</option>
-                  <option value="genomics">GENOMICS</option>
-                  <option value="radiation">RADIATION</option>
-                  <option value="immunology">IMMUNOLOGY</option>
-                  <option value="ophthalmology">OPHTHALMOLOGY</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-gray-400 text-sm mb-2 block">TIME RANGE</label>
-                <select
-                  value={timeRange}
-                  onChange={(e) => setTimeRange(e.target.value as any)}
-                  className="w-full bg-space-black border border-nasa-cyan/30 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-nasa-cyan"
-                >
-                  <option value="7d">LAST 7 DAYS</option>
-                  <option value="30d">LAST 30 DAYS</option>
-                  <option value="1y">LAST YEAR</option>
-                  <option value="all">ALL TIME</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Stats */}
-          <div className="bg-space-black/60 border border-nasa-cyan/20 rounded-xl p-4">
-            <h3 className="text-nasa-cyan font-mono text-sm mb-4">DATASET_STATS</h3>
-            <div className="space-y-3">
               {[
-                { label: 'TOTAL DATASETS', value: stats.totalDatasets, color: 'text-nasa-cyan' },
-                { label: 'ACTIVE STUDIES', value: stats.activeStudies, color: 'text-green-400' },
-                { label: 'DATA RECORDS', value: stats.totalRecords.toLocaleString(), color: 'text-white' },
-                { label: 'AVG RELIABILITY', value: `${stats.avgReliability}%`, color: 'text-yellow-400' }
-              ].map((stat, index) => (
-                <div key={index} className="flex justify-between items-center">
-                  <span className="text-gray-400 text-sm">{stat.label}</span>
-                  <span className={`${stat.color} font-mono text-sm`}>{stat.value}</span>
+                { label: 'DESTINATION', value: missionParams.destination, icon: '🚀' },
+                { label: 'DURATION', value: `${missionParams.duration} DAYS`, icon: '⏰' },
+                { label: 'CREW_SIZE', value: `${missionParams.crewSize} ASTRONAUTS`, icon: '👨‍🚀' },
+                { label: 'PHASE', value: getMissionPhase(), icon: '📡' }
+              ].map((param, index) => (
+                <div key={index} className="flex justify-between items-center py-2 border-b border-nasa-blue/20">
+                  <div className="flex items-center space-x-2">
+                    <span>{param.icon}</span>
+                    <span className="text-gray-400 text-sm">{param.label}</span>
+                  </div>
+                  <span className="text-white font-mono text-sm">{param.value}</span>
                 </div>
               ))}
             </div>
           </div>
+
+          {/* Mission Progress */}
+          <div className="bg-space-black/60 border border-nasa-cyan/20 rounded-xl p-4">
+            <h3 className="text-nasa-cyan font-mono text-sm mb-4">MISSION_PROGRESS</h3>
+            <div className="space-y-4">
+              <div>
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-gray-400">COMPLETION</span>
+                  <span className="text-nasa-cyan">{simulationProgress.toFixed(1)}%</span>
+                </div>
+                <div className="w-full bg-nasa-blue/20 rounded-full h-2">
+                  <motion.div 
+                    className="h-2 bg-gradient-to-r from-nasa-cyan to-nasa-blue rounded-full"
+                    initial={{ width: "0%" }}
+                    animate={{ width: `${simulationProgress}%` }}
+                    transition={{ duration: 0.5 }}
+                  />
+                </div>
+              </div>
+              
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">MISSION_TIME</span>
+                <span className="text-white font-mono">{formatMissionTime(missionTime)}</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col">
-          {/* Navigation Tabs */}
-          <div className="flex space-x-1 mb-6">
-            {[
-              { id: 'datasets', label: 'DATASETS', icon: Database },
-              { id: 'analytics', label: 'ANALYTICS', icon: BarChart3 },
-              { id: 'trends', label: 'TRENDS', icon: TrendingUp },
-              { id: 'insights', label: 'INSIGHTS', icon: Brain }
-            ].map((tab) => (
-              <motion.button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className={`flex items-center space-x-2 px-4 py-3 rounded-lg transition-all duration-300 ${
-                  activeTab === tab.id
-                    ? 'bg-nasa-blue text-white shadow-lg glow-blue'
-                    : 'bg-space-black/50 text-gray-400 hover:text-white hover:bg-nasa-blue/20'
-                }`}
-              >
-                <tab.icon className="w-4 h-4" />
-                <span className="font-semibold text-sm">{tab.label}</span>
-              </motion.button>
-            ))}
+        {/* Simulation Visualization */}
+        <div className="col-span-2 bg-space-black/60 border border-nasa-cyan/20 rounded-xl p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-nasa-cyan font-mono text-sm">SIMULATION_VISUALIZATION</h3>
+            <div className="text-gray-400 text-sm font-mono">
+              {simulationStatus === 'running' && '▶ REAL_TIME_SIMULATION'}
+              {simulationStatus === 'paused' && '⏸ SIMULATION_PAUSED'}
+              {simulationStatus === 'completed' && '✓ MISSION_COMPLETE'}
+              {simulationStatus === 'idle' && '⏹ AWAITING_INITIALIZATION'}
+            </div>
           </div>
 
-          {/* Tab Content */}
-          <div className="flex-1 bg-space-black/60 border border-nasa-cyan/20 rounded-xl p-4 overflow-hidden">
-            <AnimatePresence mode="wait">
-              {activeTab === 'datasets' && (
-                <motion.div
-                  key="datasets"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="h-full overflow-y-auto"
-                >
-                  <div className="grid gap-4">
-                    {filteredDatasets.map((dataset, index) => (
-                      <motion.div
-                        key={dataset.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className="bg-space-black/40 border border-nasa-blue/30 rounded-xl p-4 hover:border-nasa-cyan/50 transition-all duration-300 cursor-pointer group"
-                        onClick={() => setSelectedDataset(dataset)}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-start space-x-3">
-                            <div className="p-2 bg-nasa-blue/30 rounded-lg text-nasa-cyan group-hover:scale-110 transition-transform">
-                              {dataset.icon}
-                            </div>
-                            <div className="flex-1">
-                              <h3 className="text-white font-bold text-lg mb-1">{dataset.title}</h3>
-                              <p className="text-gray-400 text-sm mb-3">{dataset.description}</p>
-                              
-                              <div className="flex items-center space-x-4 text-xs">
-                                <div className="flex items-center space-x-1">
-                                  <Database className="w-3 h-3 text-nasa-cyan" />
-                                  <span className="text-gray-400">{dataset.records.toLocaleString()} records</span>
-                                </div>
-                                <div className="flex items-center space-x-1">
-                                  <Calendar className="w-3 h-3 text-nasa-cyan" />
-                                  <span className="text-gray-400">Updated {dataset.lastUpdated}</span>
-                                </div>
-                                <div className="flex items-center space-x-1">
-                                  <Activity className="w-3 h-3 text-green-400" />
-                                  <span className="text-green-400">{dataset.metrics.reliability}% reliable</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="text-right">
-                            <div className="text-nasa-cyan font-mono text-sm bg-nasa-blue/30 px-2 py-1 rounded">
-                              {dataset.category.toUpperCase()}
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Tags */}
-                        <div className="flex flex-wrap gap-1 mt-3">
-                          {dataset.tags.map((tag: string, tagIndex: number) => (
-                            <span
-                              key={tagIndex}
-                              className="px-2 py-1 bg-nasa-blue/20 text-nasa-cyan text-xs rounded-full border border-nasa-blue/30"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      </motion.div>
-                    ))}
+          <div className="h-[400px] flex items-center justify-center relative">
+            {/* Animated Space Background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-nasa-blue/10 to-nasa-cyan/5 rounded-lg"></div>
+            
+            {/* Mission Visualization */}
+            <div className="relative z-10 text-center">
+              <AnimatePresence mode="wait">
+                {simulationStatus === 'idle' && (
+                  <motion.div
+                    key="idle"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 1.2 }}
+                    className="space-y-4"
+                  >
+                    <div className="w-32 h-32 border-2 border-nasa-cyan rounded-full mx-auto flex items-center justify-center">
+                      <div className="w-24 h-24 border border-nasa-blue rounded-full animate-pulse"></div>
+                    </div>
+                    <p className="text-nasa-cyan font-mono">SIMULATION_READY</p>
+                    <p className="text-gray-400 text-sm">AWAITING_INITIALIZATION</p>
+                  </motion.div>
+                )}
+
+                {simulationStatus === 'running' && (
+                  <motion.div
+                    key="running"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="space-y-6"
+                  >
+                    {/* Animated Spacecraft */}
+                    <motion.div
+                      animate={{
+                        y: [0, -10, 0],
+                        rotate: [0, 5, -5, 0]
+                      }}
+                      transition={{
+                        duration: 4,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                      className="text-4xl"
+                    >
+                      🚀
+                    </motion.div>
                     
-                    {filteredDatasets.length === 0 && (
-                      <div className="text-center py-12">
-                        <Database className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                        <p className="text-gray-400 text-lg">No datasets found</p>
-                        <p className="text-gray-500 text-sm">Try adjusting your search or filters</p>
+                    {/* Progress Visualization */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm text-gray-400">
+                        <span>EARTH</span>
+                        <span>DEEP_SPACE</span>
+                        <span>{missionParams.destination}</span>
                       </div>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-
-              {activeTab === 'analytics' && (
-                <motion.div
-                  key="analytics"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="h-full"
-                >
-                  <div className="grid grid-cols-2 gap-6 h-full">
-                    {/* Research Categories */}
-                    <div className="bg-space-black/40 border border-nasa-cyan/20 rounded-xl p-4">
-                      <h3 className="text-nasa-cyan font-mono text-sm mb-4 flex items-center space-x-2">
-                        <PieChart className="w-4 h-4" />
-                        <span>RESEARCH_CATEGORIES</span>
-                      </h3>
-                      <div className="space-y-3">
-                        {Object.entries(analyticsData.categories).map(([category, count], index) => (
-                          <div key={category} className="flex items-center justify-between">
-                            <span className="text-white text-sm">{category}</span>
-                            <div className="flex items-center space-x-2">
-                              <div className="w-20 bg-nasa-blue/20 rounded-full h-2">
-                                <div 
-                                  className="h-2 bg-gradient-to-r from-nasa-cyan to-nasa-blue rounded-full"
-                                  style={{ width: `${(count / 100) * 100}%` }}
-                                />
-                              </div>
-                              <span className="text-nasa-cyan text-sm font-mono w-8 text-right">{count}%</span>
-                            </div>
-                          </div>
-                        ))}
+                      <div className="w-64 h-1 bg-nasa-blue/30 rounded-full mx-auto">
+                        <motion.div
+                          className="h-1 bg-gradient-to-r from-nasa-cyan to-green-400 rounded-full"
+                          initial={{ width: "0%" }}
+                          animate={{ width: `${simulationProgress}%` }}
+                        />
                       </div>
                     </div>
 
-                    {/* Organism Distribution */}
-                    <div className="bg-space-black/40 border border-nasa-cyan/20 rounded-xl p-4">
-                      <h3 className="text-nasa-cyan font-mono text-sm mb-4 flex items-center space-x-2">
-                        <Users className="w-4 h-4" />
-                        <span>ORGANISM_DISTRIBUTION</span>
-                      </h3>
-                      <div className="space-y-3">
-                        {Object.entries(analyticsData.organisms).map(([organism, percentage], index) => (
-                          <div key={organism} className="flex items-center justify-between">
-                            <span className="text-white text-sm">{organism}</span>
-                            <div className="flex items-center space-x-2">
-                              <div className="w-16 bg-nasa-blue/20 rounded-full h-2">
-                                <div 
-                                  className="h-2 bg-green-400 rounded-full"
-                                  style={{ width: `${percentage}%` }}
-                                />
-                              </div>
-                              <span className="text-green-400 text-sm font-mono w-8 text-right">{percentage}%</span>
-                            </div>
-                          </div>
-                        ))}
+                    {/* Real-time Data */}
+                    <div className="grid grid-cols-2 gap-4 text-xs">
+                      <div className="bg-nasa-blue/20 rounded p-2">
+                        <div className="text-nasa-cyan">CREW_VITALS</div>
+                        <div className="text-green-400">NOMINAL</div>
+                      </div>
+                      <div className="bg-nasa-blue/20 rounded p-2">
+                        <div className="text-nasa-cyan">SYSTEMS</div>
+                        <div className="text-green-400">OPTIMAL</div>
                       </div>
                     </div>
+                  </motion.div>
+                )}
 
-                    {/* Study Trends */}
-                    <div className="col-span-2 bg-space-black/40 border border-nasa-cyan/20 rounded-xl p-4">
-                      <h3 className="text-nasa-cyan font-mono text-sm mb-4 flex items-center space-x-2">
-                        <LineChart className="w-4 h-4" />
-                        <span>STUDY_TRENDS</span>
-                      </h3>
-                      <div className="flex items-end justify-between h-32 px-4">
-                        {analyticsData.trends.map((trend, index) => (
-                          <div key={index} className="flex flex-col items-center space-y-2">
-                            <div className="text-gray-400 text-xs">{trend.month}</div>
-                            <div className="flex items-end space-x-1">
-                              <div 
-                                className="w-4 bg-nasa-cyan rounded-t"
-                                style={{ height: `${(trend.studies / 80) * 60}px` }}
-                              />
-                              <div 
-                                className="w-4 bg-nasa-blue rounded-t"
-                                style={{ height: `${(trend.citations / 250) * 60}px` }}
-                              />
-                            </div>
-                            <div className="text-xs text-center">
-                              <div className="text-nasa-cyan">{trend.studies}</div>
-                              <div className="text-nasa-blue">{trend.citations}</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="flex justify-center space-x-4 mt-4 text-xs">
-                        <div className="flex items-center space-x-1">
-                          <div className="w-3 h-3 bg-nasa-cyan rounded"></div>
-                          <span className="text-gray-400">Studies</span>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          <div className="w-3 h-3 bg-nasa-blue rounded"></div>
-                          <span className="text-gray-400">Citations</span>
-                        </div>
-                      </div>
+                {simulationStatus === 'completed' && (
+                  <motion.div
+                    key="completed"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="space-y-4"
+                  >
+                    <div className="w-32 h-32 bg-green-400/20 rounded-full mx-auto flex items-center justify-center border border-green-400">
+                      <CheckCircle className="w-16 h-16 text-green-400" />
                     </div>
-                  </div>
-                </motion.div>
-              )}
-
-              {activeTab === 'trends' && (
-                <motion.div
-                  key="trends"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="h-full flex items-center justify-center"
-                >
-                  <div className="text-center">
-                    <TrendingUp className="w-16 h-16 text-nasa-cyan mx-auto mb-4" />
-                    <h3 className="text-white text-lg mb-2">Trend Analysis</h3>
-                    <p className="text-gray-400">Advanced trend analysis and predictive modeling</p>
-                    <p className="text-gray-500 text-sm mt-1">Coming in next update</p>
-                  </div>
-                </motion.div>
-              )}
-
-              {activeTab === 'insights' && (
-                <motion.div
-                  key="insights"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="h-full flex items-center justify-center"
-                >
-                  <div className="text-center">
-                    <Brain className="w-16 h-16 text-nasa-cyan mx-auto mb-4" />
-                    <h3 className="text-white text-lg mb-2">AI Insights</h3>
-                    <p className="text-gray-400">Machine learning-powered research insights</p>
-                    <p className="text-gray-500 text-sm mt-1">AI models training in progress</p>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                    <p className="text-green-400 font-mono text-lg">MISSION_SUCCESS</p>
+                    <p className="text-gray-400">All objectives completed successfully</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Dataset Detail Modal */}
+      {/* Risks & Countermeasures Panel */}
+      {(risks.length > 0 || countermeasures.length > 0) && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-6 grid grid-cols-2 gap-6"
+        >
+          {/* Identified Risks */}
+          <div className="bg-space-black/60 border border-red-400/30 rounded-xl p-4">
+            <h3 className="text-red-400 font-mono text-sm mb-4 flex items-center space-x-2">
+              <AlertTriangle className="w-4 h-4" />
+              <span>IDENTIFIED_RISKS</span>
+            </h3>
+            <div className="space-y-3">
+              {risks.map(risk => (
+                <div key={risk.id} className="flex justify-between items-center">
+                  <span className="text-white text-sm">{risk.name}</span>
+                  <div className="flex items-center space-x-2">
+                    <div className={`w-2 h-2 rounded-full ${
+                      risk.severity === 'high' ? 'bg-red-400' : 
+                      risk.severity === 'medium' ? 'bg-yellow-400' : 'bg-green-400'
+                    }`}></div>
+                    <span className="text-gray-400 text-xs">{risk.severity.toUpperCase()}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Active Countermeasures */}
+          <div className="bg-space-black/60 border border-green-400/30 rounded-xl p-4">
+            <h3 className="text-green-400 font-mono text-sm mb-4 flex items-center space-x-2">
+              <Shield className="w-4 h-4" />
+              <span>COUNTERMEASURES</span>
+            </h3>
+            <div className="space-y-3">
+              {countermeasures.map(cm => (
+                <div key={cm.id} className="flex justify-between items-center">
+                  <span className="text-white text-sm">{cm.name}</span>
+                  <div className="flex items-center space-x-2">
+                    <div className="text-green-400 text-xs">{cm.effectiveness}%</div>
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Configuration Modal */}
       <AnimatePresence>
-        {selectedDataset && (
+        {showConfig && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50"
-            onClick={() => setSelectedDataset(null)}
+            onClick={() => setShowConfig(false)}
           >
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
-              className="bg-space-black border border-nasa-cyan/30 rounded-2xl p-6 w-full max-w-4xl max-h-[80vh] overflow-y-auto"
+              className="bg-space-black border border-nasa-cyan/30 rounded-2xl p-6 w-full max-w-2xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex justify-between items-start mb-6">
-                <div className="flex items-start space-x-4">
-                  <div className="p-3 bg-nasa-blue/30 rounded-xl text-nasa-cyan">
-                    {selectedDataset.icon}
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold text-white mb-2">{selectedDataset.title}</h3>
-                    <p className="text-gray-400">{selectedDataset.description}</p>
-                  </div>
-                </div>
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-2xl font-bold text-white">MISSION_CONFIGURATION</h3>
                 <button 
-                  onClick={() => setSelectedDataset(null)}
-                  className="text-nasa-cyan hover:text-white transition-colors p-2"
+                  onClick={() => setShowConfig(false)}
+                  className="text-nasa-cyan hover:text-white transition-colors"
                 >
                   ×
                 </button>
               </div>
 
-              <div className="grid grid-cols-2 gap-6 mb-6">
-                {/* Dataset Metrics */}
-                <div className="space-y-4">
-                  <h4 className="text-nasa-cyan font-mono text-sm">DATASET_METRICS</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    {Object.entries(selectedDataset.metrics).map(([key, value]) => (
-                      <div key={key} className="bg-space-black/40 rounded-lg p-3 border border-nasa-blue/20">
-                        <div className="text-gray-400 text-sm capitalize">{key.replace('_', ' ')}</div>
-                        <div className="text-white font-bold text-lg">{String(value)}%</div>
-                      </div>
-                    ))}
-                  </div>
+              <div className="space-y-6">
+                {/* Destination */}
+                <div>
+                  <label className="text-nasa-cyan font-mono text-sm mb-2 block">DESTINATION</label>
+                  <select
+                    value={missionParams.destination}
+                    onChange={(e) => updateMissionParam('destination', e.target.value)}
+                    className="w-full bg-space-black border border-nasa-cyan/30 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-nasa-cyan"
+                  >
+                    <option value="LUNAR_BASE">LUNAR_BASE</option>
+                    <option value="MARS_COLONY">MARS_COLONY</option>
+                    <option value="DEEP_SPACE">DEEP_SPACE_MISSION</option>
+                    <option value="ISS">INTERNATIONAL_SPACE_STATION</option>
+                  </select>
                 </div>
 
-                {/* Dataset Info */}
-                <div className="space-y-4">
-                  <h4 className="text-nasa-cyan font-mono text-sm">DATASET_INFO</h4>
-                  <div className="space-y-3">
-                    {[
-                      { label: 'Records', value: selectedDataset.records.toLocaleString() },
-                      { label: 'Organism', value: selectedDataset.organism.toUpperCase() },
-                      { label: 'Category', value: selectedDataset.category.toUpperCase() },
-                      { label: 'Last Updated', value: selectedDataset.lastUpdated }
-                    ].map((info, index) => (
-                      <div key={index} className="flex justify-between">
-                        <span className="text-gray-400">{info.label}</span>
-                        <span className="text-white font-mono">{info.value}</span>
-                      </div>
-                    ))}
-                  </div>
+                {/* Mission Duration */}
+                <div>
+                  <label className="text-nasa-cyan font-mono text-sm mb-2 block">
+                    MISSION_DURATION: {missionParams.duration} DAYS
+                  </label>
+                  <input
+                    type="range"
+                    min="30"
+                    max="1000"
+                    value={missionParams.duration}
+                    onChange={(e) => updateMissionParam('duration', parseInt(e.target.value))}
+                    className="w-full"
+                  />
                 </div>
-              </div>
 
-              {/* Tags */}
-              <div className="mb-6">
-                <h4 className="text-nasa-cyan font-mono text-sm mb-3">RESEARCH_TAGS</h4>
-                <div className="flex flex-wrap gap-2">
-                  {selectedDataset.tags.map((tag: string, index: number) => (
-                    <span
-                      key={index}
-                      className="px-3 py-1 bg-nasa-blue/30 text-nasa-cyan text-sm rounded-full border border-nasa-blue/50"
+                {/* Crew Size */}
+                <div>
+                  <label className="text-nasa-cyan font-mono text-sm mb-2 block">
+                    CREW_SIZE: {missionParams.crewSize} ASTRONAUTS
+                  </label>
+                  <input
+                    type="range"
+                    min="1"
+                    max="12"
+                    value={missionParams.crewSize}
+                    onChange={(e) => updateMissionParam('crewSize', parseInt(e.target.value))}
+                    className="w-full"
+                  />
+                </div>
+
+                {/* Advanced Options */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-nasa-cyan font-mono text-sm mb-2 block">RADIATION_SHIELDING</label>
+                    <select
+                      value={missionParams.radiationShielding}
+                      onChange={(e) => updateMissionParam('radiationShielding', e.target.value)}
+                      className="w-full bg-space-black border border-nasa-cyan/30 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-nasa-cyan"
                     >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
+                      <option value="basic">BASIC</option>
+                      <option value="enhanced">ENHANCED</option>
+                      <option value="advanced">ADVANCED</option>
+                    </select>
+                  </div>
 
-              {/* Action Buttons */}
-              <div className="flex justify-end space-x-3 pt-4 border-t border-nasa-blue/20">
-                <button className="px-4 py-2 border border-nasa-cyan/30 text-nasa-cyan rounded-lg hover:bg-nasa-cyan/10 transition-colors">
-                  EXPLORE DATA
-                </button>
-                <button className="px-4 py-2 bg-nasa-blue text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
-                  <Download className="w-4 h-4" />
-                  <span>EXPORT DATASET</span>
-                </button>
+                  <div>
+                    <label className="text-nasa-cyan font-mono text-sm mb-2 block">EXERCISE_REGIMEN</label>
+                    <select
+                      value={missionParams.exerciseRegimen}
+                      onChange={(e) => updateMissionParam('exerciseRegimen', e.target.value)}
+                      className="w-full bg-space-black border border-nasa-cyan/30 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-nasa-cyan"
+                    >
+                      <option value="minimal">MINIMAL</option>
+                      <option value="standard">STANDARD</option>
+                      <option value="high_intensity">HIGH_INTENSITY</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Artificial Gravity Toggle */}
+                <div className="flex items-center justify-between">
+                  <label className="text-nasa-cyan font-mono text-sm">ARTIFICIAL_GRAVITY</label>
+                  <button
+                    onClick={() => updateMissionParam('artificialGravity', !missionParams.artificialGravity)}
+                    className={`w-12 h-6 rounded-full transition-colors ${
+                      missionParams.artificialGravity ? 'bg-green-500' : 'bg-gray-600'
+                    }`}
+                  >
+                    <div className={`w-4 h-4 rounded-full bg-white transition-transform ${
+                      missionParams.artificialGravity ? 'transform translate-x-7' : 'transform translate-x-1'
+                    }`} />
+                  </button>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-end space-x-3 pt-4">
+                  <button
+                    onClick={() => setShowConfig(false)}
+                    className="px-4 py-2 border border-nasa-cyan/30 text-nasa-cyan rounded-lg hover:bg-nasa-cyan/10 transition-colors"
+                  >
+                    CANCEL
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowConfig(false)
+                      resetSimulation()
+                    }}
+                    className="px-4 py-2 bg-nasa-blue text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    APPLY_CONFIG
+                  </button>
+                </div>
               </div>
             </motion.div>
           </motion.div>
@@ -625,4 +534,4 @@ const DataExplorer: React.FC = () => {
   )
 }
 
-export default DataExplorer
+export default MissionControl
